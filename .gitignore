@@ -1,0 +1,4 @@
+# Fetch + pack scratch (bulk sources, outputs).
+sources/
+out/
+prev/

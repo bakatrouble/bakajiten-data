@@ -1,0 +1,91 @@
+name: Pack data
+
+# Daily packed artifacts (*.bin.gz + manifest.json) from upstream
+# sources, built with the ghcr.io/bakatrouble/bakajiten-utils image.
+# Byte-identical days publish nothing. Manual runs via workflow_dispatch.
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: pack-data
+
+env:
+  IMAGE: ghcr.io/bakatrouble/bakajiten-utils:latest
+
+jobs:
+  pack:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    timeout-minutes: 360
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch bulk sources.
+        run: >
+          docker run --rm -v "$PWD:/work" "$IMAGE"
+          fetch-data --out-dir /work/sources
+
+      - name: Fetch kokugo sources.
+        run: >
+          docker run --rm -v "$PWD:/work" "$IMAGE"
+          fetch-data --kokugo-out /work/sources/kokugo/kokugo.jsonl --fetch
+
+      - name: Pack artifacts.
+        run: >
+          docker run --rm -v "$PWD:/work" "$IMAGE"
+          pack-data --kanjivg /work/sources/kanjivg
+          --templates-out /work/out/templates.bin
+          --kanjidic /work/sources/kanjidic2.xml --kanji-out /work/out/kanji.bin
+          --jmdict /work/sources/JMdict.xml --jmdict-out /work/out/jmdict.bin
+          --jmnedict /work/sources/JMnedict.xml --jmnedict-out /work/out/jmnedict.bin
+          --kokugo /work/sources/kokugo/kokugo.jsonl --kokugo-out /work/out/kokugo.bin
+          --jlpt /work/jlpt.csv
+
+      - name: Gzip + manifest.
+        run: |
+          python3 - <<'EOF'
+          import gzip, json, shutil
+          from pathlib import Path
+          manifest = {"version": 1, "files": {}}
+          for src in sorted(Path("out").glob("*.bin")):
+              dst = src.with_suffix(src.suffix + ".gz")
+              with open(src, "rb") as f_in, open(dst, "wb") as f_out:
+                  with gzip.GzipFile(filename="", mode="wb", compresslevel=6, fileobj=f_out, mtime=0) as gz:
+                      shutil.copyfileobj(f_in, gz)
+              manifest["files"][src.name] = {"size": src.stat().st_size, "gz": dst.stat().st_size}
+              print(f"{src.name}: {src.stat().st_size} -> {dst.stat().st_size}")
+          Path("out/manifest.json").write_text(json.dumps(manifest))
+          EOF
+
+      - name: Skip when unchanged.
+        id: changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          LATEST="$(gh release list --limit 1 --json tagName -q '.[0].tagName')"
+          if [[ -n "$LATEST" ]]; then
+            rm -rf prev && mkdir prev
+            if gh release download "$LATEST" --pattern manifest.json --dir prev --clobber 2>/dev/null; then
+              if python3 -c "import json,sys; sys.exit(0 if json.load(open('prev/manifest.json'))['files'] == json.load(open('out/manifest.json'))['files'] else 1)"; then
+                echo "changed=false" >> "$GITHUB_OUTPUT"
+                echo "identical to $LATEST, skipping release"
+                exit 0
+              fi
+            fi
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Publish release.
+        if: steps.changed.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="data-$(date -u +%Y%m%d)"
+          gh release create "$TAG" out/*.bin.gz out/manifest.json \
+            --title "$TAG" --notes "Daily packed artifacts (upstream sources as of $(date -u +%Y-%m-%d))."
