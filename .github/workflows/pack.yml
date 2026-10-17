@@ -33,11 +33,13 @@ jobs:
         run: >
           docker run --rm -v "$PWD:/work" "$IMAGE"
           fetch-data --out-dir /work/sources
+          --kanjivg-dir /work/sources/kanjivg
 
       - name: Fetch kokugo sources.
         run: >
           docker run --rm -v "$PWD:/work" "$IMAGE"
-          fetch-data --kokugo-out /work/sources/kokugo/kokugo.jsonl --fetch
+          fetch-data --kokugo-out /work/sources/kokugo/kokugo.jsonl
+          --kokugo-dir /work/sources/kokugo --fetch
 
       - name: Pack artifacts.
         run: >
