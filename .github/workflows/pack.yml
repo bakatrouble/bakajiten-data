@@ -26,6 +26,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Resolve utils image digest.
+        id: image
+        run: |
+          DIGEST="$(docker manifest inspect "$IMAGE" | jq -r '.config.digest')"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+
+      - name: Cache utils image.
+        id: image-cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/bakajiten-utils.tar
+          key: bakajiten-utils-${{ steps.image.outputs.digest }}
+
+      - name: Load or pull utils image.
+        run: |
+          if [[ -f /tmp/bakajiten-utils.tar ]]; then
+            docker load -i /tmp/bakajiten-utils.tar
+          else
+            docker pull "$IMAGE"
+            docker save "$IMAGE" -o /tmp/bakajiten-utils.tar
+          fi
+
       - name: Prepare dirs.
         run: mkdir -p sources out
 
