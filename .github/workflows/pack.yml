@@ -40,6 +40,7 @@ jobs:
           docker run --rm -v "$PWD:/work" "$IMAGE"
           fetch-data --kokugo-out /work/sources/kokugo/kokugo.jsonl
           --kokugo-dir /work/sources/kokugo --fetch
+          --jmdict /work/sources/JMdict.xml
 
       - name: Pack artifacts.
         run: >
