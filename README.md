@@ -14,9 +14,18 @@ Each dated release (`data-YYYYMMDD`) holds:
 
 - `jmdict.bin.gz`, `jmnedict.bin.gz`, `kanji.bin.gz`,
   `templates.bin.gz`, `kokugo.bin.gz` — gzip level 6, mtime 0
-- `manifest.json` — `{version: 1, files: {name: {size, gz}}}` with
-  raw/gzip byte sizes, the same schema the web app's consent
-  screen reads (`manifest.json` beside the blobs)
+- `manifest.json` — `{version: 1, build_date, files: {name: {size,
+  gz, version, sha256, sources, last_changed_manifest}}}` with
+  raw/gzip byte sizes (what the web app's consent screen reads), the
+  build date, per-artifact versions straight from `pack-data --json`
+  (`kanjidic2` `database_version`, JMdict header date, KanjiVG
+  `version.txt`; unversioned snapshots report their source mtime),
+  and the sha256 of the packed bytes. `sources` names the datasets
+  that went into each artifact; `last_changed_manifest` links the
+  release manifest where that file's content last changed
+  (carried forward while its sha256 is unchanged). The release
+  skip-check and the web app compare `sha256`: versions are
+  provenance only, since some move daily without content changes.
 
 A day with byte-identical output produces no release (the manifest
 is compared against the latest release first).
