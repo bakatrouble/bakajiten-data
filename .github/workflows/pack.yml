@@ -26,6 +26,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Prepare dirs.
+        run: mkdir -p sources out
+
       - name: Fetch bulk sources.
         run: >
           docker run --rm -v "$PWD:/work" "$IMAGE"
