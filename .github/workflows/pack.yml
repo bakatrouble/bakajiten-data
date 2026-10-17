@@ -66,31 +66,31 @@ jobs:
           fi
 
       - name: Fetch sources.
-        run: >
-          docker run --rm -v "$PWD:/work" "$IMAGE"
-          fetch-data --out-dir /work/sources
+        run: |
+          docker run --rm -v "$PWD:/work" "$IMAGE" \
+            fetch-data --out-dir /work/sources
 
       - name: Pack artifacts.
-        run: >
-          docker run --rm -v "$PWD:/work" "$IMAGE"
-          pack-data --kanjivg /work/sources/kanjivg
-          --templates-out /work/out/templates.bin
-          --kanjidic /work/sources/kanjidic2.xml --kanji-out /work/out/kanji.bin
-          --jmdict /work/sources/JMdict.xml --jmdict-out /work/out/jmdict.bin
-          --jmnedict /work/sources/JMnedict.xml --jmnedict-out /work/out/jmnedict.bin
-          --kokugo /work/sources/ja-extract.jsonl
-          --wordnet /work/sources/wn-ntumc-jpn.xml
-          --kokugo-out /work/out/kokugo.bin
-          --jmdict-backfill /work/sources/JMdict.xml
-          --jlpt /work/jlpt.csv --json
-          | tee out/summaries.json
+        run: |
+          docker run --rm -v "$PWD:/work" "$IMAGE" \
+            pack-data --kanjivg /work/sources/kanjivg \
+                      --templates-out /work/out/templates.bin \
+                      --kanjidic /work/sources/kanjidic2.xml --kanji-out /work/out/kanji.bin \
+                      --jmdict /work/sources/JMdict.xml --jmdict-out /work/out/jmdict.bin \
+                      --jmnedict /work/sources/JMnedict.xml --jmnedict-out /work/out/jmnedict.bin \
+                      --kokugo /work/sources/ja-extract.jsonl \
+                      --wordnet /work/sources/wn-ntumc-jpn.xml \
+                      --kokugo-out /work/out/kokugo.bin \
+                      --jmdict-backfill /work/sources/JMdict.xml \
+                      --jlpt /work/jlpt.csv --json \
+            | tee out/summaries.json
 
       - name: Gzip + manifest.
-        run: >-
-          python3 pack.py --summaries out/summaries.json
-          --out out
-          --prev prev/manifest.json
-          --manifest-url "https://github.com/${{ github.repository }}/releases/download/${{ steps.tag.outputs.tag }}/manifest.json"
+        run: |
+          python3 pack.py --summaries out/summaries.json \
+                          --out out \
+                          --prev prev/manifest.json \
+                          --manifest-url "https://github.com/${{ github.repository }}/releases/download/${{ steps.tag.outputs.tag }}/manifest.json"
 
       - name: Skip when unchanged.
         id: changed
