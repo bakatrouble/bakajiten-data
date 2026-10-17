@@ -52,13 +52,15 @@ gunzip -k data/*.bin.gz
 docker run --rm -v "$PWD:/work" ghcr.io/bakatrouble/bakajiten-utils \
     fetch-data --out-dir /work/sources
 docker run --rm -v "$PWD:/work" ghcr.io/bakatrouble/bakajiten-utils \
-    fetch-data --kokugo-out /work/sources/kokugo/kokugo.jsonl --fetch
-docker run --rm -v "$PWD:/work" ghcr.io/bakatrouble/bakajiten-utils \
     pack-data --kanjivg /work/sources/kanjivg \
     --templates-out /work/out/templates.bin \
     --kanjidic /work/sources/kanjidic2.xml --kanji-out /work/out/kanji.bin \
     --jmdict /work/sources/JMdict.xml --jmdict-out /work/out/jmdict.bin \
     --jmnedict /work/sources/JMnedict.xml --jmnedict-out /work/out/jmnedict.bin \
-    --kokugo /work/sources/kokugo/kokugo.jsonl --kokugo-out /work/out/kokugo.bin \
-    --jlpt /work/jlpt.csv
+    --kokugo /work/sources/ja-extract.jsonl
+    --wordnet /work/sources/wn-ntumc-jpn.xml --kokugo-out /work/out/kokugo.bin \
+    --jmdict-backfill /work/sources/JMdict.xml \
+    --jlpt /work/jlpt.csv --json | tee out/summaries.json
+python3 pack.py --summaries out/summaries.json --out out \
+    --manifest-url https://github.com/bakatrouble/bakajiten-data/releases/download/data-YYYYMMDD/manifest.json
 ```
