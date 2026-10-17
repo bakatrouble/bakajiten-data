@@ -2,7 +2,7 @@
 
 Packed dictionary artifacts (`*.bin.gz` + `manifest.json`), rebuilt
 daily from upstream sources with the
-[`bakajiten-utils`](https://github.com/bakatrouble/japdic) image
+[`bakajiten-utils`](https://github.com/bakatrouble/bakajiten) image
 (`utils/Dockerfile` in that repo, published to
 `ghcr.io/bakatrouble/bakajiten-utils`). The bakajiten apps never pack
 data themselves — Qt CI, the AppImage deploy, and the web app all
