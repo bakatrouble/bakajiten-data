@@ -34,7 +34,7 @@ from pathlib import Path
 # Artifact filename -> source datasets that went into it.
 DATASETS = {
     "templates.bin": ["kanjivg"],
-    "kanji.bin": ["kanjidic2", "kanjivg"],
+    "kanji.bin": ["kanjidic2", "kanjivg", "kradfile"],
     "jmdict.bin": ["jmdict"],
     "jmnedict.bin": ["jmnedict"],
     "kokugo.bin": ["kaikki", "wordnet", "jmdict"],

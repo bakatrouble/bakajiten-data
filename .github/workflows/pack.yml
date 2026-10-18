@@ -76,6 +76,7 @@ jobs:
             pack-data --kanjivg /work/sources/kanjivg \
                       --templates-out /work/out/templates.bin \
                       --kanjidic /work/sources/kanjidic2.xml --kanji-out /work/out/kanji.bin \
+                      --kradfile /work/sources/kradfile \
                       --jmdict /work/sources/JMdict.xml --jmdict-out /work/out/jmdict.bin \
                       --jmnedict /work/sources/JMnedict.xml --jmnedict-out /work/out/jmnedict.bin \
                       --kokugo /work/sources/ja-extract.jsonl \
