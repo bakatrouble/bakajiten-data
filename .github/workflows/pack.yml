@@ -24,7 +24,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Resolve utils image digest.
         id: image
@@ -40,7 +40,7 @@ jobs:
 
       - name: Cache utils image.
         id: image-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: /tmp/bakajiten-utils.tar
           key: bakajiten-utils-${{ steps.image.outputs.digest }}
