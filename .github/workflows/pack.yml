@@ -122,3 +122,16 @@ jobs:
         run: |
           gh release create "${{ steps.tag.outputs.tag }}" out/*.bin.gz out/manifest.json \
             --title "${{ steps.tag.outputs.tag }}" --notes "Daily packed artifacts (upstream sources as of $(date -u +%Y-%m-%d))."
+
+      - name: Trigger web deploy.
+        # The web frontend hosts these artifacts on its Pages site,
+        # so it redeploys on every data release (setup: a classic
+        # PAT with `repo` scope stored as WEB_DISPATCH_TOKEN here).
+        if: steps.changed.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.WEB_DISPATCH_TOKEN }}
+        run: |
+          gh api repos/bakatrouble/bakajiten-web/dispatches \
+            -f event_type=data-updated \
+            -f client_payload[tag]="${{ steps.tag.outputs.tag }}" \
+            --silent && echo "web deploy dispatched"
