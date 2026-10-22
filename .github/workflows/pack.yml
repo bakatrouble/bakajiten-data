@@ -126,11 +126,17 @@ jobs:
       - name: Trigger web deploy.
         # The web frontend hosts these artifacts on its Pages site,
         # so it redeploys on every data release (setup: a classic
-        # PAT with `repo` scope stored as WEB_DISPATCH_TOKEN here).
+        # PAT with `repo` scope stored as WEB_DISPATCH_TOKEN here;
+        # the step skips silently without it).
         if: steps.changed.outputs.changed == 'true'
         env:
+          HAS_DISPATCH_TOKEN: ${{ secrets.WEB_DISPATCH_TOKEN != '' }}
           GH_TOKEN: ${{ secrets.WEB_DISPATCH_TOKEN }}
         run: |
+          if [ "$HAS_DISPATCH_TOKEN" != true ]; then
+            echo "no WEB_DISPATCH_TOKEN — skipping web deploy trigger"
+            exit 0
+          fi
           gh api repos/bakatrouble/bakajiten-web/dispatches \
             -f event_type=data-updated \
             -f client_payload[tag]="${{ steps.tag.outputs.tag }}" \
