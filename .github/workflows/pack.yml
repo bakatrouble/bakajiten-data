@@ -29,7 +29,13 @@ jobs:
       - name: Resolve utils image digest.
         id: image
         run: |
-          DIGEST="$(docker manifest inspect "$IMAGE" | jq -r '.config.digest')"
+          # The utils image pushes as an index (buildx
+          # attestations), whose top level has no `.config` — the
+          # old `.config.digest` lookup resolved to null and froze
+          # the cache key, pinning every run to the first-saved
+          # image. Hash the inspect payload itself instead: stable
+          # for either shape, and a miss only ever pulls fresh.
+          DIGEST="$(docker manifest inspect "$IMAGE" | sha256sum | cut -d' ' -f1)"
           echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
 
       - name: Cache utils image.
@@ -82,6 +88,7 @@ jobs:
                       --kokugo /work/sources/ja-extract.jsonl \
                       --wordnet /work/sources/wn-ntumc-jpn.xml \
                       --kokugo-out /work/out/kokugo.bin \
+                      --kokugo-versions /work/sources/kokugo-sources.json \
                       --jmdict-backfill /work/sources/JMdict.xml \
                       --jlpt /work/jlpt.csv --json \
             | tee out/summaries.json
